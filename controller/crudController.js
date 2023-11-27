@@ -1,4 +1,7 @@
 const CrudModel = require("../model/crudSchema");
+const upload = require("../utils/multer.js");
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
 
 const PostController = async (req, res) => {
   try {
@@ -32,7 +35,7 @@ const AllPostController = async (req,res)=>{
   }
 }
 //update user
-const UpdateController = async(req,res)=>{
+let UpdateController = async(req,res)=>{
   try{
     const id = req.params.id;
     const updateuser = await CrudModel.findByIdAndUpdate({_id:id},req.body,{new:true})
@@ -51,9 +54,57 @@ const DeleteController = async(req,res)=>{
     res.send(error)
   }
 }
+//? old ways
+// router.post("/api/uploadimage", upload.any("image"), (req, res) => {
+//   console.log("files", req.files);
+//   const path = req.files[0].path;
+//   cloudinary.uploader.upload(path, (error, data) => {
+//     if (error) {
+//       return res.json({
+//         message: "Could not upload image to cloud , try again",
+//       });
+//     }
+//     res.json({
+//       message: "image upload",
+//       data,
+//     });
+//     fs.unlinkSync(path);
+//   });
+// });
+
+const ImageUploader = (req, res) => {
+  upload.any("image")(req, res, (err) => {
+    if (err) {
+      return res.status(500).json({
+        message: "Error uploading files",
+        error: err.message,
+      });
+    }
+    console.log("files", req.files);
+    const path = req.files[0].path;
+
+    cloudinary.uploader.upload(path, (error, data) => {
+      if (error) {
+        return res.status(500).json({
+          message: "Could not upload image to cloud, try again",
+          error: error.message,
+          data: null,
+        });
+      }
+      res.json({
+        message: "Image upload",
+        data,
+      });
+      // Remove the local file after uploading to Cloudinary
+      fs.unlinkSync(path);
+    });
+  });
+};
+
 module.exports = {
   PostController,
   AllPostController,
  UpdateController,
- DeleteController
+ DeleteController,
+ ImageUploader
 };

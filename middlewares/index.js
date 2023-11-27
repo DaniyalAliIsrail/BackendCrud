@@ -20,11 +20,10 @@ const authMiddleware = (req, res, next) => {
   } catch (error) {
     res.json({
       status: false,
-      message: "UnAuth user",
+      message: "error",
     });
   }
 };
-
 module.exports = {
   authMiddleware,
 };
