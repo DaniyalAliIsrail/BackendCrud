@@ -1,9 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-// const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 const UserModel = require("../model/userSchema");
 const OTPModel = require("../model/OTPSchema");
-// const EmailVerfication = require("../templates/emailverification");
+const dotenv = require("dotenv").config();
+const EmailVerfication = require("../templates/emailverification");
 
 const SignUpController = async (req, res) => {
   try {
@@ -24,7 +25,6 @@ const SignUpController = async (req, res) => {
       email,
       password: hashPassword,
       isType:selectUser
-
     };
     console.log(objToSend);
 
@@ -37,33 +37,29 @@ const SignUpController = async (req, res) => {
       });
       return;
     }
-
     const otpCode = Math.floor(100000 + Math.random() * 900000);
 
-    // const transporter = nodemailer.createTransport({
-    //   service: "gmail",
-    //   port: 587,
-    //   secure: true,
-    //   auth: {
-    //     user: "daniyalali12568@gmail.com",
-    //     pass: "Irjgcocnetrwfnlp",
-    //   },
-    // });
-
-    // const emailData = await transporter.sendMail({
-    //   from: "dev.daniyalali`.com",
-    //   to: email,
-    //   subject: "Email Verfication",
-    //   html: EmailVerfication(fullName, otpCode),
-    // });
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      port: "587",
+      secure: true,
+      auth: {
+        user: process.env.HOST,
+        pass: process.env.PASS,
+      },
+    });
+    const emailData = await transporter.sendMail({
+      from: process.env.USER,
+      to: "daniyalali12568@gmail.com",
+      subject: "email verification",
+      html: EmailVerfication(fullName, otpCode),
+    });
 
     await OTPModel.create({
       otp_code: otpCode,
       email,
     });
-
     const userSave = await UserModel.create(objToSend);
-
     res.json({
       status: true,
       message: "Please Check Your EmailAddress For OTP",

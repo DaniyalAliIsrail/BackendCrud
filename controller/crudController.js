@@ -1,59 +1,97 @@
 const CrudModel = require("../model/crudSchema");
+const { fileUploader } = require("../utils/fileUploader.js");
 const upload = require("../utils/multer.js");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
+// const PostController = async (req, res) => {
+
+//   const image = req.files[0].path;
+//   try {
+//     bodyData = req.body;
+//     const {title,description,category,imageUrl} = bodyData;
+//     if(!title ||!description  || !category || !imageUrl ){
+//       res.json({
+//         status: false,
+//         message: "Required Fields Are Missing!",
+//         data: null,
+//       });
+//       return
+//     }
+//     const imageObj = await fileUploader(image);
+//     //validation nhy lagana hay
+//     const crudOperation = new CrudModel(bodyData);
+//     const crudData = await crudOperation.save();
+//     res.status(200).json({status:200,crudData});
+//   } catch (error) {
+//     res.send(error)
+//   }
+// };
+
 const PostController = async (req, res) => {
   try {
     bodyData = req.body;
-    const {title,description,category} = bodyData;
-    if(!title ||!description  || !category ){
+    const image = req.files[0].path;
+    console.log(image);
+    console.log(bodyData);
+    // return
+    const { title, description, category } = bodyData;
+    if (!title || !description || !category) {
       res.json({
         status: false,
         message: "Required Fields Are Missing!",
         data: null,
       });
-      return
+      return;
     }
     //validation nhy lagana hay
-    const crudOperation = new CrudModel(bodyData);
+    const imageurl = await fileUploader(image);
+    const objtosend = {
+      title,
+      description,
+      category,
+      imageUrl: imageurl.secure_url,
+    };
+    const crudOperation = new CrudModel(objtosend);
     const crudData = await crudOperation.save();
-    res.status(200).json({status:200,crudData});
+    res.status(200).json({ status: 200, crudData });
   } catch (error) {
-    res.send(error)
+    res.send(error);
   }
 };
 //AllPost
-const AllPostController = async (req,res)=>{
-  try{
-    const allData =await CrudModel.find({});
-    res.status(200).json({status:200,allData});
+const AllPostController = async (req, res) => {
+  try {
+    const allData = await CrudModel.find({});
+    res.status(200).json({ status: 200, allData });
+  } catch (error) {
+    res.status(400).json({ status: 200, error });
   }
-  catch(error){
-    res.status(400).json({status:200,error});
-
-  }
-}
+};
 //update user
-let UpdateController = async(req,res)=>{
-  try{
+let UpdateController = async (req, res) => {
+  try {
     const id = req.params.id;
-    const updateuser = await CrudModel.findByIdAndUpdate({_id:id},req.body,{new:true})
-    res.status(200).json({status:200,updateuser})
-  }catch(error){
-    res.send(error)
+    const updateuser = await CrudModel.findByIdAndUpdate(
+      { _id: id },
+      req.body,
+      { new: true }
+    );
+    res.status(200).json({ status: 200, updateuser });
+  } catch (error) {
+    res.send(error);
   }
-}
-//delet user 
-const DeleteController = async(req,res)=>{
-  try{
+};
+//delet user
+const DeleteController = async (req, res) => {
+  try {
     const id = req.params.id;
-    const delUser = await CrudModel.findByIdAndDelete({_id:id})
-    res.status(200).json({status:200,delUser});
-  }catch(error){
-    res.send(error)
+    const delUser = await CrudModel.findByIdAndDelete({ _id: id });
+    res.status(200).json({ status: 200, delUser });
+  } catch (error) {
+    res.send(error);
   }
-}
+};
 //? old ways
 // router.post("/api/uploadimage", upload.any("image"), (req, res) => {
 //   console.log("files", req.files);
@@ -72,6 +110,35 @@ const DeleteController = async(req,res)=>{
 //   });
 // });
 
+// const ImageUploader = (req, res) => {
+//   upload.any("image")(req, res, (err) => {
+//     if (err) {
+//       return res.status(500).json({
+//         message: "Error uploading files",
+//         error: err.message,
+//       });
+//     }
+//     console.log("files", req.files);
+//     const path = req.files[0].path;
+
+//     cloudinary.uploader.upload(path, (error, data) => {
+//       if (error) {
+//         return res.status(500).json({
+//           message: "Could not upload image to cloud, try again",
+//           error: error.message,
+//           data: null,
+//         });
+//       }
+//       res.status(200).json({
+//         message: "Image upload",
+//         status: "200",
+//         data,
+//       });
+//       // Remove the local file after uploading to Cloudinary
+//       fs.unlinkSync(path);
+//     });
+//   });
+// };
 const ImageUploader = (req, res) => {
   upload.any("image")(req, res, (err) => {
     if (err) {
@@ -100,11 +167,10 @@ const ImageUploader = (req, res) => {
     });
   });
 };
-
 module.exports = {
   PostController,
   AllPostController,
- UpdateController,
- DeleteController,
- ImageUploader
+  UpdateController,
+  DeleteController,
+  ImageUploader,
 };
